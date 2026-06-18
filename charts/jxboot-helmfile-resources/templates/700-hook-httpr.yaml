@@ -1,0 +1,23 @@
+{{- if and (or (eq "lighthouse" .Values.jxRequirements.webhook) (eq "prow" .Values.jxRequirements.webhook)) (not .Values.istio.enabled) (eq "httproute" .Values.hook.ingressType) }}
+apiVersion: {{ .Values.gatewayApi.apiVersion | default "gateway.networking.k8s.io/v1" }}
+kind: HTTPRoute
+metadata:
+  annotations:
+{{- template "httpRouteAnnotations" (dict "Values" .Values "component" "hook") }}
+  name: hook
+spec:
+  parentRefs:
+{{- include "httpRouteParentRefs" . | nindent 2 }}
+{{- if or .Values.hook.httpRoute.customHost .Values.jxRequirements.ingress.domain }}
+  hostnames:
+  - {{ include "httpRouteHostname" (dict "Values" .Values "component" "hook") }}
+{{- end }}
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /hook
+    backendRefs:
+    - name: hook
+      port: 80
+{{- end }}

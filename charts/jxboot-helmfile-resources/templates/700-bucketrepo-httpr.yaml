@@ -1,0 +1,23 @@
+{{- if and (eq "bucketrepo" .Values.jxRequirements.repository) (not .Values.istio.enabled) (eq "httproute" .Values.bucketrepo.ingressType) }}
+apiVersion: {{ .Values.gatewayApi.apiVersion | default "gateway.networking.k8s.io/v1" }}
+kind: HTTPRoute
+metadata:
+  annotations:
+{{- template "httpRouteAnnotations" (dict "Values" .Values "component" "bucketrepo") }}
+  name: bucketrepo
+spec:
+  parentRefs:
+{{- include "httpRouteParentRefs" . | nindent 2 }}
+{{- if or .Values.bucketrepo.httpRoute.customHost .Values.jxRequirements.ingress.domain }}
+  hostnames:
+  - {{ include "httpRouteHostname" (dict "Values" .Values "component" "bucketrepo") }}
+{{- end }}
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: bucketrepo
+      port: 80
+{{- end }}

@@ -44,6 +44,7 @@ pipeline:
       email: jenkins-x@googlecloud.com
 
 bucketrepo:
+  ingressType: ingress # options: ingress, httproute
   ingress:
     annotations: {}
     customHost: "" # setting this will override the value from .Values.ingress.customHost.bucketrepo
@@ -51,8 +52,13 @@ bucketrepo:
     prefix: bucketrepo
     tls:
       secretName: ""
+  httpRoute:
+    annotations: {}
+    customHost: ""
+    prefix: bucketrepo
 
 chartmuseum:
+  ingressType: ingress # options: ingress, httproute
   ingress:
     annotations: {}
     customHost: "" # setting this will override the value from .Values.ingress.customHost.chartmuseum
@@ -60,9 +66,14 @@ chartmuseum:
     prefix: chartmuseum
     tls:
       secretName: ""
+  httpRoute:
+    annotations: {}
+    customHost: ""
+    prefix: chartmuseum
 
 docker-registry:
   enabled: false
+  ingressType: ingress # options: ingress, httproute
   ingress:
     annotations: {}
     customHost: "" # setting this will override the value from .Values.ingress.customHost.dockerRegistry
@@ -70,24 +81,40 @@ docker-registry:
     prefix: docker-registry
     tls:
       secretName: ""
+  httpRoute:
+    annotations: {}
+    customHost: ""
+    prefix: docker-registry
 
 hook:
+  ingressType: ingress # options: ingress, httproute
   ingress:
+    enabled: true
     annotations: {}
     customHost: "" # setting this will override the value from .Values.ingress.customHost.hook
     customIngressClass: "" # setting this will override the value from .Values.ingress.customIngressClass.hook
     prefix: hook
     tls:
       secretName: ""
+  httpRoute:
+    annotations: {}
+    customHost: ""
+    prefix: hook
 
 nexus:
+  ingressType: ingress # options: ingress, httproute
   ingress:
+    enabled: true
     annotations: {}
     customHost: "" # setting this will override the value from .Values.ingress.customHost.nexus
     customIngressClass: "" # setting this will override the value from .Values.ingress.customIngressClass.nexus
     prefix: nexus # setting this will override the value from .Values.ingress.prefix.nexus
     tls:
       secretName: ""
+  httpRoute:
+    annotations: {}
+    customHost: ""
+    prefix: nexus
 
 # TODO we want to remove exposecontroller at some point
 exposer: Ingress
@@ -130,6 +157,18 @@ ingress:
   #   hook: ""
   #   nexus: ""
   #   dockerRegistry: ""
+
+gatewayApi:
+  apiVersion: gateway.networking.k8s.io/v1
+  annotations: {} # optional: merged into every HTTPRoute's metadata.annotations
+  gateway:
+    name: "" # defaults to "envoy-gateway"
+    namespace: "" # defaults to "envoy-gateway-system"
+    sectionName:
+      http: http
+      https: https
+  attachHttp: true # attach the http listener parentRef
+  attachHttps: true # additionally attach the https listener parentRef when jxRequirements.ingress.tls.enabled
 
 nexusServiceLink:
   enabled: false

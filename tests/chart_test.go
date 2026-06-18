@@ -48,6 +48,19 @@ func TestChartsWithDifferentValues(t *testing.T) {
 
 		case "gke-domain-none-repo":
 			assertChartRepoIngress(t, tc, false, false)
+
+		case "gateway-api":
+			// services routed via HTTPRoute must produce HTTPRoutes and no Ingresses
+			assertHTTPRoute(t, tc, "chartmuseum", "nexus", "hook", "docker-registry")
+			assertNoIngress(t, tc, "chartmuseum", "nexus", "hook", "docker-registry")
+
+		case "gateway-api-bucketrepo":
+			assertHTTPRoute(t, tc, "bucketrepo", "hook")
+			assertNoIngress(t, tc, "bucketrepo", "hook")
+
+		case "gateway-api-custom-refs":
+			assertHTTPRoute(t, tc, "bucketrepo", "hook")
+			assertNoIngress(t, tc, "bucketrepo", "hook")
 		}
 
 		dir := filepath.Join(tc.OutDir, "results", "jenkins.io", "v1")
@@ -94,6 +107,20 @@ func assertChartRepoIngress(t *testing.T, tc *pkg.TestCase, expectChartMuseum bo
 
 	assertFileExists(t, expectChartMuseum, filepath.Join(dir, "chartmuseum.yaml"), tc.Name)
 	assertFileExists(t, expectBucketRepo, filepath.Join(dir, "bucketrepo.yaml"), tc.Name)
+}
+
+func assertHTTPRoute(t *testing.T, tc *pkg.TestCase, names ...string) {
+	dir := filepath.Join(tc.OutDir, "results", "gateway.networking.k8s.io", "v1", "HTTPRoute")
+	for _, n := range names {
+		assertFileExists(t, true, filepath.Join(dir, n+".yaml"), tc.Name)
+	}
+}
+
+func assertNoIngress(t *testing.T, tc *pkg.TestCase, names ...string) {
+	dir := filepath.Join(tc.OutDir, "results", "networking.k8s.io", "v1", "Ingress")
+	for _, n := range names {
+		assertFileExists(t, false, filepath.Join(dir, n+".yaml"), tc.Name)
+	}
 }
 
 func assertFileExists(t *testing.T, exists bool, path, name string) {

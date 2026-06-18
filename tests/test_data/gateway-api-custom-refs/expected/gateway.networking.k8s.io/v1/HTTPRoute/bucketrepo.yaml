@@ -1,0 +1,20 @@
+# Source: jxboot-helmfile-resources/templates/700-bucketrepo-httpr.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: bucketrepo
+spec:
+  parentRefs:
+  - name: my-gateway
+    namespace: my-gateway-system
+    sectionName: web
+  hostnames:
+  - bucketrepo-jx.mydomain.com
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: bucketrepo
+      port: 80

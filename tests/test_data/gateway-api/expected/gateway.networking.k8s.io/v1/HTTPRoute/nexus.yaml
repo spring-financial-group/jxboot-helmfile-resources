@@ -1,0 +1,28 @@
+# Source: jxboot-helmfile-resources/templates/700-nexus-httpr.yaml
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+    team: platform
+  name: nexus
+spec:
+  parentRefs:
+  - name: envoy-gateway
+    namespace: envoy-gateway-system
+    sectionName: http
+  - name: envoy-gateway
+    namespace: envoy-gateway-system
+    sectionName: https
+  - name: shared-gateway
+    namespace: infra
+    sectionName: web
+  hostnames:
+  - mynexus.acme.com
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: nexus
+      port: 80

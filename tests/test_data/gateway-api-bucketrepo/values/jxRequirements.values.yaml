@@ -1,0 +1,82 @@
+versions:
+  # TODO update with latest builders version
+  builders: latest
+  # we set the versions of jx & updatebot to TESTVAL
+  # in order to ensure tests are deterministic
+  # (templated file content doesn't change just because new versions are released)
+  jx: TESTVAL
+  updatebot: TESTVAL
+
+# TODO we want to remove exposecontroller at some point
+exposer: Ingress
+
+# imported from the global secrets?
+secrets:
+  tektonBucket: ""
+  featureFlagAPIKey: ""
+  chartMuseum:
+    username: ""
+    password: ""
+  pipelineUser:
+    username: ""
+    email: ""
+    token: ""
+
+# route bucketrepo and hook via HTTPRoute. ingress.kind is httproute and TLS is
+# disabled, so the default envoy-gateway http parentRef is attached. bucketrepo
+# also appends a customParentRef; hook uses the default only.
+bucketrepo:
+  ingressType: httproute
+  httpRoute:
+    customParentRefs:
+    - name: shared-gateway
+      namespace: infra
+      sectionName: web
+
+hook:
+  ingressType: httproute
+
+jxRequirements:
+  autoUpdate:
+    enabled: false
+    schedule: ""
+  bootConfigURL: https://github.com/jenkins-x/jenkins-x-boot-config.git
+  cluster:
+    clusterName: mycluster
+    devEnvApprovers:
+    - someone
+    environmentGitOwner: myorg
+    environmentGitPublic: true
+    gitKind: github
+    gitName: github
+    gitPublic: true
+    gitServer: https://github.com
+    kanikoFlags: "--insecure-registries"
+    namespace: jx
+    project: myproject
+    provider: gke
+    zone: europe-west1-c
+  environments:
+  - key: dev
+    repository: environment-mycluster-dev
+  - key: staging
+    repository: environment-mycluster-staging
+  - key: production
+    repository: environment-mycluster-production
+  gitops: true
+  ingress:
+    domain: "mydomain.com"
+    externalDNS: false
+    kind: httproute
+    namespaceSubDomain: -jx.
+    tls:
+      email: ""
+      enabled: false
+      production: false
+  repository: bucketrepo
+  secretStorage: local
+  storage: []
+  versionStream:
+    ref: master
+    url: https://github.com/jenkins-x/jenkins-x-versions.git
+  webhook: lighthouse

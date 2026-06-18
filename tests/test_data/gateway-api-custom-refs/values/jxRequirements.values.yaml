@@ -1,0 +1,86 @@
+versions:
+  # TODO update with latest builders version
+  builders: latest
+  # we set the versions of jx & updatebot to TESTVAL
+  # in order to ensure tests are deterministic
+  # (templated file content doesn't change just because new versions are released)
+  jx: TESTVAL
+  updatebot: TESTVAL
+
+# TODO we want to remove exposecontroller at some point
+exposer: Ingress
+
+# imported from the global secrets?
+secrets:
+  tektonBucket: ""
+  featureFlagAPIKey: ""
+  chartMuseum:
+    username: ""
+    password: ""
+  pipelineUser:
+    username: ""
+    email: ""
+    token: ""
+
+# ingress.kind is left unset (not "httproute"), so no default envoy-gateway refs
+# are injected: parentRefs are exactly the user-supplied customParentRefs. This
+# is the "bring your own gateway" path.
+bucketrepo:
+  ingressType: httproute
+  httpRoute:
+    customParentRefs:
+    - name: my-gateway
+      namespace: my-gateway-system
+      sectionName: web
+
+hook:
+  ingressType: httproute
+  httpRoute:
+    customParentRefs:
+    - name: my-gateway
+      namespace: my-gateway-system
+      sectionName: web
+
+jxRequirements:
+  autoUpdate:
+    enabled: false
+    schedule: ""
+  bootConfigURL: https://github.com/jenkins-x/jenkins-x-boot-config.git
+  cluster:
+    clusterName: mycluster
+    devEnvApprovers:
+    - someone
+    environmentGitOwner: myorg
+    environmentGitPublic: true
+    gitKind: github
+    gitName: github
+    gitPublic: true
+    gitServer: https://github.com
+    kanikoFlags: "--insecure-registries"
+    namespace: jx
+    project: myproject
+    provider: gke
+    zone: europe-west1-c
+  environments:
+  - key: dev
+    repository: environment-mycluster-dev
+  - key: staging
+    repository: environment-mycluster-staging
+  - key: production
+    repository: environment-mycluster-production
+  gitops: true
+  ingress:
+    domain: "mydomain.com"
+    externalDNS: false
+    namespaceSubDomain: -jx.
+    tls:
+      email: ""
+      enabled: false
+      production: false
+  repository: bucketrepo
+  secretStorage: local
+  storage: []
+  versionStream:
+    ref: master
+    url: https://github.com/jenkins-x/jenkins-x-versions.git
+  webhook: lighthouse

@@ -1,5 +1,5 @@
 {{- if and (or (eq "lighthouse" .Values.jxRequirements.webhook) (eq "prow" .Values.jxRequirements.webhook)) (not .Values.istio.enabled) (eq "httproute" .Values.hook.ingressType) }}
-apiVersion: {{ .Values.gatewayApi.apiVersion | default "gateway.networking.k8s.io/v1" }}
+apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
 {{- $annotations := include "httpRouteAnnotations" (dict "Values" .Values "component" "hook") }}
@@ -9,8 +9,11 @@ metadata:
 {{- end }}
   name: hook
 spec:
+{{- $parentRefs := include "httpRouteParentRefs" (dict "Values" .Values "component" "hook") }}
+{{- if trim $parentRefs }}
   parentRefs:
-{{- include "httpRouteParentRefs" . | nindent 2 }}
+  {{- $parentRefs | nindent 2 }}
+{{- end }}
 {{- if or .Values.hook.httpRoute.customHost .Values.jxRequirements.ingress.domain }}
   hostnames:
   - {{ include "httpRouteHostname" (dict "Values" .Values "component" "hook") }}

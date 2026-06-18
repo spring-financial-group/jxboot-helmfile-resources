@@ -1,5 +1,5 @@
 {{- if and (eq "nexus" .Values.jxRequirements.repository) (not .Values.istio.enabled) (eq "httproute" .Values.nexus.ingressType) }}
-apiVersion: {{ .Values.gatewayApi.apiVersion | default "gateway.networking.k8s.io/v1" }}
+apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
 {{- $annotations := include "httpRouteAnnotations" (dict "Values" .Values "component" "nexus") }}
@@ -9,8 +9,11 @@ metadata:
 {{- end }}
   name: nexus
 spec:
+{{- $parentRefs := include "httpRouteParentRefs" (dict "Values" .Values "component" "nexus") }}
+{{- if trim $parentRefs }}
   parentRefs:
-{{- include "httpRouteParentRefs" . | nindent 2 }}
+  {{- $parentRefs | nindent 2 }}
+{{- end }}
 {{- if or .Values.nexus.httpRoute.customHost .Values.jxRequirements.ingress.domain }}
   hostnames:
   - {{ include "httpRouteHostname" (dict "Values" .Values "component" "nexus") }}

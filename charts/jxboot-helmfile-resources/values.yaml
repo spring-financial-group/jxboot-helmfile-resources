@@ -56,6 +56,7 @@ bucketrepo:
     annotations: {}
     customHost: ""
     prefix: bucketrepo
+    customParentRefs: []
 
 chartmuseum:
   ingressType: ingress # options: ingress, httproute
@@ -70,6 +71,7 @@ chartmuseum:
     annotations: {}
     customHost: ""
     prefix: chartmuseum
+    customParentRefs: []
 
 docker-registry:
   enabled: false
@@ -85,11 +87,11 @@ docker-registry:
     annotations: {}
     customHost: ""
     prefix: docker-registry
+    customParentRefs: []
 
 hook:
   ingressType: ingress # options: ingress, httproute
   ingress:
-    enabled: true
     annotations: {}
     customHost: "" # setting this will override the value from .Values.ingress.customHost.hook
     customIngressClass: "" # setting this will override the value from .Values.ingress.customIngressClass.hook
@@ -100,11 +102,11 @@ hook:
     annotations: {}
     customHost: ""
     prefix: hook
+    customParentRefs: []
 
 nexus:
   ingressType: ingress # options: ingress, httproute
   ingress:
-    enabled: true
     annotations: {}
     customHost: "" # setting this will override the value from .Values.ingress.customHost.nexus
     customIngressClass: "" # setting this will override the value from .Values.ingress.customIngressClass.nexus
@@ -114,7 +116,7 @@ nexus:
   httpRoute:
     annotations: {}
     customHost: ""
-    prefix: nexus
+    customParentRefs: []
 
 # TODO we want to remove exposecontroller at some point
 exposer: Ingress
@@ -157,18 +159,6 @@ ingress:
   #   hook: ""
   #   nexus: ""
   #   dockerRegistry: ""
-
-gatewayApi:
-  apiVersion: gateway.networking.k8s.io/v1
-  annotations: {} # optional: merged into every HTTPRoute's metadata.annotations
-  gateway:
-    name: "" # defaults to "envoy-gateway"
-    namespace: "" # defaults to "envoy-gateway-system"
-    sectionName:
-      http: http
-      https: https
-  attachHttp: true # attach the http listener parentRef
-  attachHttps: true # additionally attach the https listener parentRef when jxRequirements.ingress.tls.enabled
 
 nexusServiceLink:
   enabled: false

@@ -37,60 +37,62 @@
 {{- end }}
 
 {{- /*
-httpRouteParentRefs renders the parentRefs list entries for an HTTPRoute.
-The "http" listener is attached whenever gatewayApi.attachHttp is set; the
-"https" listener is additionally attached when gatewayApi.attachHttps and
-jxRequirements.ingress.tls.enabled are both true. Section names and the gateway
-name/namespace come from the gatewayApi values block.
+httpRouteParentRefs renders the parentRefs list for an HTTPRoute.
+
+When jxRequirements.ingress.kind is "httproute" the default envoy-gateway "http"
+listener is attached, plus the "https" listener when
+jxRequirements.ingress.tls.enabled is true. Any per-component
+httpRoute.customParentRefs are then appended.
+
+When ingress.kind is anything other than "httproute" no defaults are injected
+and the parentRefs are exactly the user-supplied httpRoute.customParentRefs, so
+users running their own gateway can fully control attachment.
+
+Call with (dict "Values" .Values "component" "<name>").
 */ -}}
 {{- define "httpRouteParentRefs" -}}
-{{- $gw := .Values.gatewayApi.gateway -}}
-{{- $name := $gw.name | default "envoy-gateway" -}}
-{{- $ns := $gw.namespace | default "envoy-gateway-system" -}}
-{{- if .Values.gatewayApi.attachHttp -}}
-- name: {{ $name }}
-  namespace: {{ $ns }}
-  sectionName: {{ $gw.sectionName.http | default "http" }}
-{{- end }}
-{{- if and .Values.gatewayApi.attachHttps .Values.jxRequirements.ingress.tls.enabled }}
-- name: {{ $name }}
-  namespace: {{ $ns }}
-  sectionName: {{ $gw.sectionName.https | default "https" }}
-{{- end }}
+{{- $spec := index .Values .component -}}
+{{- $refs := list -}}
+{{- if eq "httproute" .Values.jxRequirements.ingress.kind -}}
+{{- $refs = append $refs (dict "name" "envoy-gateway" "namespace" "envoy-gateway-system" "sectionName" "http") -}}
+{{- if .Values.jxRequirements.ingress.tls.enabled -}}
+{{- $refs = append $refs (dict "name" "envoy-gateway" "namespace" "envoy-gateway-system" "sectionName" "https") -}}
+{{- end -}}
+{{- end -}}
+{{- range $spec.httpRoute.customParentRefs -}}
+{{- $refs = append $refs . -}}
+{{- end -}}
+{{- if $refs -}}
+{{ toYaml $refs }}
+{{- end -}}
 {{- end }}
 
 {{- /*
 httpRouteHostname returns the hostname for a component's HTTPRoute: the
 per-component httpRoute.customHost if set, otherwise the composed
-<prefix><namespaceSubDomain><domain>. Call with (dict "Values" .Values "component" "<name>").
+<prefix><namespaceSubDomain><domain>. The prefix falls back to the component's
+ingress.prefix when httpRoute.prefix is not set. Call with
+(dict "Values" .Values "component" "<name>").
 */ -}}
 {{- define "httpRouteHostname" -}}
 {{- $spec := index .Values .component -}}
 {{- if $spec.httpRoute.customHost -}}
 {{ $spec.httpRoute.customHost }}
 {{- else -}}
-{{ $spec.httpRoute.prefix }}{{ .Values.jxRequirements.ingress.namespaceSubDomain }}{{ .Values.jxRequirements.ingress.domain }}
+{{ $spec.httpRoute.prefix | default $spec.ingress.prefix }}{{ .Values.jxRequirements.ingress.namespaceSubDomain }}{{ .Values.jxRequirements.ingress.domain }}
 {{- end -}}
 {{- end }}
 
 {{- /*
-httpRouteAnnotations merges the global gatewayApi.annotations with the
-per-component httpRoute.annotations and returns them as raw (unindented) YAML,
-or an empty string when there are none. Call with
+httpRouteAnnotations returns the per-component httpRoute.annotations as raw
+(unindented) YAML, or an empty string when there are none. Call with
 (dict "Values" .Values "component" "<name>"); the caller is responsible for
 indenting (e.g. `nindent 4`) and for only emitting the `annotations:` key when
 the result is non-empty.
 */ -}}
 {{- define "httpRouteAnnotations" -}}
-{{- $annotations := dict -}}
-{{- $componentSpec := index .Values .component -}}
-{{- if hasKey $componentSpec.httpRoute "annotations" -}}
-{{- $_ := merge $annotations $componentSpec.httpRoute.annotations -}}
-{{- end -}}
-{{- if .Values.gatewayApi.annotations -}}
-{{- $_ := merge $annotations .Values.gatewayApi.annotations -}}
-{{- end -}}
-{{- if $annotations -}}
-{{ toYaml $annotations }}
+{{- $spec := index .Values .component -}}
+{{- if $spec.httpRoute.annotations -}}
+{{ toYaml $spec.httpRoute.annotations }}
 {{- end -}}
 {{- end }}

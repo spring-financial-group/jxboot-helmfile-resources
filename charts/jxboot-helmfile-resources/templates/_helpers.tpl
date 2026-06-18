@@ -75,19 +75,22 @@ per-component httpRoute.customHost if set, otherwise the composed
 
 {{- /*
 httpRouteAnnotations merges the global gatewayApi.annotations with the
-per-component httpRoute.annotations and emits them indented for metadata.annotations.
-Call with (dict "Values" .Values "component" "<name>").
+per-component httpRoute.annotations and returns them as raw (unindented) YAML,
+or an empty string when there are none. Call with
+(dict "Values" .Values "component" "<name>"); the caller is responsible for
+indenting (e.g. `nindent 4`) and for only emitting the `annotations:` key when
+the result is non-empty.
 */ -}}
-{{- define "httpRouteAnnotations" }}
-  {{- $annotations := dict }}
-  {{- $componentSpec := index .Values .component }}
-  {{- if hasKey $componentSpec.httpRoute "annotations" }}
-    {{- $_ := merge $annotations $componentSpec.httpRoute.annotations }}
-  {{- end }}
-  {{- if .Values.gatewayApi.annotations }}
-    {{- $_ := merge $annotations .Values.gatewayApi.annotations }}
-  {{- end }}
-  {{- if $annotations }}
-{{ toYaml $annotations | indent 4 }}
-  {{- end }}
+{{- define "httpRouteAnnotations" -}}
+{{- $annotations := dict -}}
+{{- $componentSpec := index .Values .component -}}
+{{- if hasKey $componentSpec.httpRoute "annotations" -}}
+{{- $_ := merge $annotations $componentSpec.httpRoute.annotations -}}
+{{- end -}}
+{{- if .Values.gatewayApi.annotations -}}
+{{- $_ := merge $annotations .Values.gatewayApi.annotations -}}
+{{- end -}}
+{{- if $annotations -}}
+{{ toYaml $annotations }}
+{{- end -}}
 {{- end }}
